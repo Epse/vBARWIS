@@ -30,14 +30,23 @@ class TailCrossWind(BaseModel):
 	tail_wind: Annotated[float, Field(alias="tailWind")]
 	cross_wind: Annotated[float, Field(alias="crossWind")]
 
+	def __str__(self) -> str:
+		return f"{self.tail_wind}T{self.cross_wind}X"
+
 class BaseSensorData(BaseModel):
 	sensor_reading: SensorReading
+
+	def to_human(self) -> str:
+		return self.sensor_reading.to_human()
 
 class RunwaySensorData(BaseSensorData):
 	sensor_type: Literal['runway']
 	sensor_reading: SensorReading
 	sensor_wind: TailCrossWind
 	sensor_graph: dict[str, Any]
+
+	def to_human(self) -> str:
+		return super().to_human() + f" {self.sensor_wind}"
 
 class SensorSensorData(BaseSensorData):
 	sensor_type: Literal['sensor']

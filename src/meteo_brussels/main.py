@@ -1,0 +1,88 @@
+import logging
+
+from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeySequence
+
+from sensor_types import Reading
+from api_calls import BatcAPI
+from widgets.wind_grid import WindGrid
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+class MainWindow(QMainWindow):
+    api = BatcAPI()
+    data: Reading  | None = None
+
+    refresh_interval = 2 * 60 * 1000 # 2 minutes
+
+    def __init__(self):
+        super().__init__()
+
+        self.api.setup_cookies()
+
+        self.setWindowTitle("vBARWIS")
+        #self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        #self.setWindowFlag(Qt.WindowType.Tool) # Gives it a smaller titlebar, and no taskbar entry, but also makes it not fully quit when window is closed...
+
+        self.menu = self.menuBar()
+        self.barwisMenu = self.menu.addMenu("BARWIS")
+        self.barwisMenu.addAction("Quit", self.close, QKeySequence("Ctrl+Q"))
+
+        # We are going for the OG BARWIS look
+        # It has 3 columns, 2 big and 1 small. Left has textual info, main wnds in text and METAR info, as well as time and date
+        # Middle has a grid of wind data and below a main wind rose with large readouts. Radio buttons let you pick which one.
+        # Right then has smaller wind roses for the remaining runways.
+        # Ideally we tuck a feature somewhere to show forecasts, and a minimode popout with just a small wind rose for one runway
+
+        container = QWidget()
+        self.setCentralWidget(container)
+
+        layout = QHBoxLayout(container)
+
+        self.wind_grid = WindGrid()
+        layout.addWidget(self.wind_grid)
+
+        self.status = self.statusBar()
+        self.status.showMessage("Done")
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.on_timer)
+        self.timer.start(self.refresh_interval)
+
+        self.get_data()
+    
+    def get_data(self):
+        self.status.showMessage("Refreshing...")
+        data = self.api.fetch_doc()
+        if data is None:
+            self.status.showMessage("Got no data..")
+            return
+
+        current = data['data']['currentLabel']
+        self.data = self.api.get_latest_reading(data)
+
+        if self.data is None:
+            self.status.showMessage("No data after parse...")
+            return
+
+        # Loading to children
+        self.wind_grid.load_data(self.data)
+
+        log.info(f"Got {len(self.data.wind_sensor_detail)}")
+        self.status.showMessage(f"Done, data from {current}")
+
+    def on_timer(self):
+        self.get_data()
+
+
+def main():
+    app = QApplication()
+    window = MainWindow()
+    window.show()
+
+    app.exec()
+
+if __name__ == "__main__":
+    main()
