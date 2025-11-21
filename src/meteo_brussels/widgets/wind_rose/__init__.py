@@ -108,8 +108,8 @@ class WindRose(QWidget):
 		wind_angle = normalise_heading(self.sensor_reading.wind_direction)
 
 		self.heading_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction))
-		self.wind_lower_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction_deviation_left))
-		self.wind_upper_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction_deviation_right))
+		self.wind_lower_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction + self.sensor_reading.wind_direction_deviation_left))
+		self.wind_upper_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction - self.sensor_reading.wind_direction_deviation_right))
 
 		# Normalisation functions guarantee positive angles from any heading. This simplifies
 
