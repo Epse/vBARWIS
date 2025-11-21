@@ -20,7 +20,6 @@ class BatcAPI():
 		"""The purpose of this is to set up some plausibly deniable cookies for the following requests"""
 		response = self.session.get(PAGE_URL, headers=FAKE_HEADERS)
 		self.log.info(f"Setup request got {response.status_code}")
-		print(f"Setup request got {response.status_code}")
 
 	def fetch_doc(self) -> dict[str, Any] | None:
 		response = self.session.get(API_URL, headers=FAKE_HEADERS)

@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayou
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent
 from PySide6.QtCore import Qt, QLineF
 from widgets import DARK_GREEN, BLUE
+from sensor_types import SensorReading
 from .arc import QGraphicsArcItem
 
 
@@ -34,12 +35,12 @@ def line_for_wind_heading(heading: int) -> QLineF:
 	normalised_heading = normalise_heading(heading)
 	y_heading = -math.sin(math.radians(normalised_heading)) * 5 + 5
 	x_heading = math.cos(math.radians(normalised_heading)) * 5 + 5
-	print(f"{heading} / {normalised_heading}: y {math.sin(math.radians(normalised_heading))} | {y_heading}, x {math.cos(math.radians(normalised_heading))} | {x_heading}")
 	return QLineF(5, 5, x_heading, y_heading)
 
 
 class WindRose(QWidget):
 	pie_width = 10.0
+	sensor_reading: SensorReading
 	"""Width of the slice showing current wind direction"""
 
 
@@ -47,10 +48,6 @@ class WindRose(QWidget):
 		super().__init__()
 
 		self.show_debug_lines = show_debug_lines
-
-		self.wind_direction = 210
-		self.deviation_left = 10
-		self.deviation_right = 20
 
 		self.scene = QGraphicsScene()
 
@@ -95,10 +92,8 @@ class WindRose(QWidget):
 
 		self.setLayout(self._layout)
 
-	def set_wind(self, heading: int, lower: int, upper: int) -> None:
-		self.wind_direction = heading
-		self.deviation_left = lower
-		self.deviation_right = upper
+	def set_wind(self, reading: SensorReading) -> None:
+		self.sensor_reading = reading
 
 		self._render()
 
@@ -110,12 +105,11 @@ class WindRose(QWidget):
 		#self._render()
 
 	def _render(self):
-		print("Rendering!")
-		wind_angle = normalise_heading(self.wind_direction)
+		wind_angle = normalise_heading(self.sensor_reading.wind_direction)
 
-		self.heading_line.setLine(line_for_wind_heading(self.wind_direction))
-		self.wind_lower_line.setLine(line_for_wind_heading(self.deviation_left))
-		self.wind_upper_line.setLine(line_for_wind_heading(self.deviation_right))
+		self.heading_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction))
+		self.wind_lower_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction_deviation_left))
+		self.wind_upper_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction_deviation_right))
 
 		# Normalisation functions guarantee positive angles from any heading. This simplifies
 
@@ -123,10 +117,10 @@ class WindRose(QWidget):
 		self.central.setSpanAngle(floor((360.0 - self.pie_width) * 16))
 
 		self.left_arc.setStartAngle(floor(wind_angle + self.pie_width / 2) * 16)
-		self.left_arc.setSpanAngle(self.deviation_left * 16)
+		self.left_arc.setSpanAngle(self.sensor_reading.wind_direction_deviation_left * 16)
 
 		self.right_arc.setStartAngle(floor(wind_angle - self.pie_width / 2) * 16)
-		self.right_arc.setSpanAngle(-self.deviation_right * 16)
+		self.right_arc.setSpanAngle(-self.sensor_reading.wind_direction_deviation_right * 16)
 
 
 	def resizeEvent(self, event: QResizeEvent) -> None:
