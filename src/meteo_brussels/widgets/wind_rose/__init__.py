@@ -1,6 +1,6 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QLabel
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent
 from PySide6.QtCore import Qt, QLineF
 from widgets import DARK_GREEN, BLUE
@@ -86,11 +86,13 @@ class WindRose(QWidget):
 		self.wind_upper_line.setVisible(self.show_debug_lines)
 
 		self.view = QGraphicsView(self.scene)
-		self.view.fitInView(0, 0, 10, 10, Qt.AspectRatioMode.KeepAspectRatio)
 		self._layout = QVBoxLayout()
+		self.title = QLabel()
+		self._layout.addWidget(self.title)
 		self._layout.addWidget(self.view)
 
 		self.setLayout(self._layout)
+		self.view.fitInView(0, 0, 12, 12, Qt.AspectRatioMode.KeepAspectRatio)
 
 	def set_wind(self, reading: SensorReading) -> None:
 		self.sensor_reading = reading
@@ -102,9 +104,10 @@ class WindRose(QWidget):
 		self.heading_line.setVisible(self.show_debug_lines)
 		self.wind_lower_line.setVisible(self.show_debug_lines)
 		self.wind_upper_line.setVisible(self.show_debug_lines)
-		#self._render()
 
 	def _render(self):
+		self.title.setText(self.sensor_reading.label)
+
 		wind_angle = normalise_heading(self.sensor_reading.wind_direction)
 
 		self.heading_line.setLine(line_for_wind_heading(self.sensor_reading.wind_direction))
@@ -124,7 +127,7 @@ class WindRose(QWidget):
 
 
 	def resizeEvent(self, event: QResizeEvent) -> None:
-		self.view.fitInView(0, 0, 10, 10, Qt.AspectRatioMode.KeepAspectRatio)
 		super().resizeEvent(event)
+		self.view.fitInView(0, 0, 12, 12, Qt.AspectRatioMode.KeepAspectRatio)
 
 

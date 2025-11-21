@@ -7,7 +7,7 @@ from PySide6.QtGui import QKeySequence
 from sensor_types import Reading
 from api_calls import BatcAPI
 from widgets.wind_grid import WindGrid
-from widgets.wind_rose import WindRose
+from widgets.wind_rose.selectable import SelectableWindRose
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
         if self.auto_refresh:
             self.timer.start(self.refresh_interval)
 
-        self.wind_rose = WindRose(show_debug_lines=self.show_debug)
+        self.wind_rose = SelectableWindRose(show_debug_lines=self.show_debug)
         layout.addWidget(self.wind_rose)
 
         self.get_data()
@@ -85,9 +85,7 @@ class MainWindow(QMainWindow):
 
         # Loading to children
         self.wind_grid.load_data(self.data)
-        main_wind_key = "runway-25R" # TODO configurable
-        main_wind_sensor = self.data.wind_sensor_detail[main_wind_key].sensor_reading
-        self.wind_rose.set_wind(main_wind_sensor)
+        self.wind_rose.set_data(self.data)
 
         log.info(f"Got {len(self.data.wind_sensor_detail)}")
         self.status.showMessage(f"Done, data from {current}")
