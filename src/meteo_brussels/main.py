@@ -7,6 +7,7 @@ from PySide6.QtGui import QKeySequence
 from sensor_types import Reading
 from api_calls import BatcAPI
 from widgets.wind_grid import WindGrid
+from widgets.wind_rose import WindRose
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -16,6 +17,8 @@ class MainWindow(QMainWindow):
     data: Reading  | None = None
 
     refresh_interval = 2 * 60 * 1000 # 2 minutes
+    auto_refresh = False
+    show_debug = False
 
     def __init__(self):
         super().__init__()
@@ -28,7 +31,16 @@ class MainWindow(QMainWindow):
 
         self.menu = self.menuBar()
         self.barwisMenu = self.menu.addMenu("BARWIS")
+        self.debug_toggle = self.barwisMenu.addAction("Show Debug", self.toggle_debug)
+        self.debug_toggle.setCheckable(True)
+        self.debug_toggle.setChecked(self.show_debug)
         self.barwisMenu.addAction("Quit", self.close, QKeySequence("Ctrl+Q"))
+        
+        self.refreshMenu = self.menu.addMenu("Refresh")
+        self.auto_refresh_action = self.refreshMenu.addAction("Automatic", self.toggle_autorefresh)
+        self.auto_refresh_action.setCheckable(True)
+        self.auto_refresh_action.setChecked(self.auto_refresh)
+        self.refreshMenu.addAction("Refresh now", self.get_data, QKeySequence("Ctrl+R"))
 
         # We are going for the OG BARWIS look
         # It has 3 columns, 2 big and 1 small. Left has textual info, main wnds in text and METAR info, as well as time and date
@@ -49,7 +61,11 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.on_timer)
-        self.timer.start(self.refresh_interval)
+        if self.auto_refresh:
+            self.timer.start(self.refresh_interval)
+
+        self.wind_rose = WindRose(show_debug_lines=self.show_debug)
+        layout.addWidget(self.wind_rose)
 
         self.get_data()
     
@@ -69,12 +85,30 @@ class MainWindow(QMainWindow):
 
         # Loading to children
         self.wind_grid.load_data(self.data)
+        main_wind_key = "runway-25R" # TODO configurable
+        main_wind_sensor = self.data.wind_sensor_detail[main_wind_key].sensor_reading
+        self.wind_rose.set_wind(main_wind_sensor.wind_direction, main_wind_sensor.wind_direction_deviation_left, main_wind_sensor.wind_direction_deviation_right)
 
         log.info(f"Got {len(self.data.wind_sensor_detail)}")
         self.status.showMessage(f"Done, data from {current}")
 
     def on_timer(self):
         self.get_data()
+
+    def toggle_autorefresh(self):
+        if self.auto_refresh:
+            self.timer.stop()
+        else:
+            self.timer.start(self.refresh_interval)
+
+        self.auto_refresh = not self.auto_refresh
+        self.auto_refresh_action.setChecked(self.auto_refresh)
+    
+    def toggle_debug(self):
+        self.show_debug = not self.show_debug
+        self.debug_toggle.setChecked(self.show_debug)
+
+        self.wind_rose.set_debug(self.show_debug)
 
 
 def main():
