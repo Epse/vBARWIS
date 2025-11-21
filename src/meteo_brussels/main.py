@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
         self.wind_grid.load_data(self.data)
         main_wind_key = "runway-25R" # TODO configurable
         main_wind_sensor = self.data.wind_sensor_detail[main_wind_key].sensor_reading
-        self.wind_rose.set_wind(main_wind_sensor.wind_direction, main_wind_sensor.wind_direction_deviation_left, main_wind_sensor.wind_direction_deviation_right)
+        self.wind_rose.set_wind(main_wind_sensor)
 
         log.info(f"Got {len(self.data.wind_sensor_detail)}")
         self.status.showMessage(f"Done, data from {current}")
