@@ -8,6 +8,7 @@ from sensor_types import Reading
 from api_calls import BatcAPI
 from widgets.wind_grid import WindGrid
 from widgets.wind_rose.selectable import SelectableWindRose
+from widgets.many_wind_roses import ManyWindRoses
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -67,9 +68,12 @@ class MainWindow(QMainWindow):
         self.wind_rose = SelectableWindRose(show_debug_lines=self.show_debug)
         layout.addWidget(self.wind_rose)
 
-        self.get_data()
+        self.many_wind_roses = ManyWindRoses()
+        layout.addWidget(self.many_wind_roses)
+
+        self.get_data(initial=True)
     
-    def get_data(self):
+    def get_data(self, initial: bool = False):
         self.status.showMessage("Refreshing...")
         data = self.api.fetch_doc()
         if data is None:
@@ -86,9 +90,23 @@ class MainWindow(QMainWindow):
         # Loading to children
         self.wind_grid.load_data(self.data)
         self.wind_rose.set_data(self.data)
+        self.many_wind_roses.set_reading(self.data)
+        self.wind_rose.selected.connect(self.update_many_keys)
+        
+        if initial:
+            keys = [key for key in self.data.wind_sensor_detail.keys() if "runway-" in key]
+            self.many_wind_roses.set_show_keys(keys)
 
         log.info(f"Got {len(self.data.wind_sensor_detail)}")
         self.status.showMessage(f"Done, data from {current}")
+
+    def update_many_keys(self, selected_key: str) -> None:
+        if self.data is None:
+            return
+
+        keys = [key for key in self.data.wind_sensor_detail.keys() if "runway-" in key]
+        keys.remove(selected_key)
+        self.many_wind_roses.set_show_keys(keys)
 
     def on_timer(self):
         self.get_data()

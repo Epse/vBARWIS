@@ -1,13 +1,15 @@
 from typing import cast
 from PySide6.QtWidgets import QSizePolicy, QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QLabel, QHBoxLayout, QButtonGroup, QAbstractButton, QRadioButton
 from PySide6.QtGui import QBrush, QColor, QCursor, QFont, QIcon, QPalette, QPen, QRegion, QResizeEvent
-from PySide6.QtCore import QLocale, QPoint, QRect, QSize, Qt, QLineF
+from PySide6.QtCore import QLocale, QPoint, QRect, QSize, Qt, QLineF, Signal
 from . import WindRose
 from sensor_types import Reading
 
 class SelectableWindRose(QWidget):
-	reading: Reading
-	selected_key: str
+	_reading: Reading
+	_selected_key: str
+
+	selected = Signal(str)
 
 	def __init__(self, show_debug_lines: bool = False):
 		super().__init__()
@@ -31,7 +33,7 @@ class SelectableWindRose(QWidget):
 		self.setLayout(outer_layout)
 
 	def set_data(self, reading: Reading) -> None:
-		self.reading = reading
+		self._reading = reading
 
 		for button in self.button_group.buttons():
 			self.button_group.removeButton(button)
@@ -41,7 +43,7 @@ class SelectableWindRose(QWidget):
 		keys = [key for key in reading.wind_sensor_detail.keys() if "runway-" in key]
 		titles = [key[len("runway-"):] for key in keys]
 
-		self.selected_key = keys[0]
+		self._selected_key = keys[0]
 
 		for idx in range(len(keys)):
 			button = QRadioButton(titles[idx])
@@ -54,15 +56,19 @@ class SelectableWindRose(QWidget):
 		self._after_selection_changed()
 		
 	def _after_selection_changed(self) -> None:
-		self.wind_rose.set_wind(self.reading.wind_sensor_detail[self.selected_key].sensor_reading)
+		self.wind_rose.set_wind(self._reading.wind_sensor_detail[self._selected_key].sensor_reading)
+		self.selected.emit(self._selected_key)
 
 	def _button_toggled(self, button: QAbstractButton, checked: bool) -> None:
 		if not checked:
 			return
 		
 		id = button.text()
-		self.selected_key = f"runway-{id}"
+		self._selected_key = f"runway-{id}"
 		self._after_selection_changed()
 	
 	def set_debug(self, debug: bool) -> None:
 		self.wind_rose.set_debug(debug)
+
+	def get_selected_key(self) -> str:
+		return self._selected_key
