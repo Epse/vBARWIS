@@ -1,9 +1,10 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QLabel
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent
 from PySide6.QtCore import Qt, QLineF
 from widgets import DARK_GREEN, BLUE
+from widgets.big_label import BigLabelMin
 from .wind_reading import WindReading
 from sensor_types import SensorReading
 from .arc import QGraphicsArcItem
@@ -39,6 +40,7 @@ def line_for_wind_heading(heading: int) -> QLineF:
 	return QLineF(5, 5, x_heading, y_heading)
 
 
+# TODO: need to deal with the needed overlaps somehow...
 class WindRose(QWidget):
 	pie_width = 10.0
 	_sensor_reading: SensorReading
@@ -88,7 +90,8 @@ class WindRose(QWidget):
 
 		self.view = QGraphicsView(self.scene)
 		self._layout = QVBoxLayout()
-		self.title = QLabel()
+
+		self.title = BigLabelMin(scaling=1.5)
 		self._layout.addWidget(self.title)
 		self._layout.addWidget(self.view)
 

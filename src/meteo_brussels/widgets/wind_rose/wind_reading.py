@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QWidget
 from sensor_types import InnerWind
+from widgets.big_label import BigLabel
 
 class WindReading(QWidget):
 	_data: InnerWind
@@ -9,10 +10,13 @@ class WindReading(QWidget):
 		self._layout = QHBoxLayout()
 		self.setLayout(self._layout)
 
-		self._heading = QLabel()
-		self._speed = QLabel()
-		self._layout.addWidget(self._heading)
-		self._layout.addWidget(self._speed)
+		self._heading = BigLabel()
+		self._speed = BigLabel()
+		self._layout.addStretch()
+		self._layout.addWidget(self._heading, stretch=0)
+		self._layout.addSpacing(5)
+		self._layout.addWidget(self._speed, stretch=0)
+		self._layout.addStretch()
 
 	def set_data(self, wind: InnerWind):
 		self._data = wind

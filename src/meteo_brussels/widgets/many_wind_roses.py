@@ -4,6 +4,7 @@ from sensor_types import Reading, SensorReading, RunwaySensorData
 from widgets.wind_rose import WindRose
 
 
+# TODO popout buttons?
 class ManyWindRoses(QWidget):
 	_reading: Reading
 	_show_keys: list[str] = []
