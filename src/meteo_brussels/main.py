@@ -54,8 +54,12 @@ class MainWindow(QMainWindow):
 
         layout = QHBoxLayout(container)
 
+        central_container = QWidget()
+        central_layout = QVBoxLayout(central_container)
+        layout.addWidget(central_container, stretch=1)
+
         self.wind_grid = WindGrid()
-        layout.addWidget(self.wind_grid)
+        central_layout.addWidget(self.wind_grid)
 
         self.status = self.statusBar()
         self.status.showMessage("Done")
@@ -66,10 +70,10 @@ class MainWindow(QMainWindow):
             self.timer.start(self.refresh_interval)
 
         self.wind_rose = SelectableWindRose(show_debug_lines=self.show_debug)
-        layout.addWidget(self.wind_rose)
+        central_layout.addWidget(self.wind_rose)
 
         self.many_wind_roses = ManyWindRoses()
-        layout.addWidget(self.many_wind_roses)
+        layout.addWidget(self.many_wind_roses, stretch=0)
 
         self.get_data(initial=True)
     
@@ -95,6 +99,7 @@ class MainWindow(QMainWindow):
         
         if initial:
             keys = [key for key in self.data.wind_sensor_detail.keys() if "runway-" in key]
+            keys.pop(0)
             self.many_wind_roses.set_show_keys(keys)
 
         log.info(f"Got {len(self.data.wind_sensor_detail)}")

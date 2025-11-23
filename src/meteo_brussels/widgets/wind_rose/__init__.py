@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayou
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent
 from PySide6.QtCore import Qt, QLineF
 from widgets import DARK_GREEN, BLUE
+from .wind_reading import WindReading
 from sensor_types import SensorReading
 from .arc import QGraphicsArcItem
 
@@ -68,7 +69,7 @@ class WindRose(QWidget):
 		self.scene.addItem(self.right_arc)
 
 		# Temporary, until I figure out tickmarks
-		pen = QPen(QColor.fromString("black"), 0.0)
+		pen = QPen(self.palette().windowText(), 0.0)
 		self.scene.addLine(0, 0, 10, 10, pen)
 		self.scene.addLine(0, 10, 10, 0, pen)
 		self.scene.addLine(0, 5, 10, 5, pen)
@@ -91,6 +92,9 @@ class WindRose(QWidget):
 		self._layout.addWidget(self.title)
 		self._layout.addWidget(self.view)
 
+		self._reading_widget = WindReading()
+		self._layout.addWidget(self._reading_widget)
+
 		self.setLayout(self._layout)
 
 	def set_wind(self, reading: SensorReading) -> None:
@@ -106,6 +110,7 @@ class WindRose(QWidget):
 
 	def _render(self):
 		self.title.setText(self._sensor_reading.label)
+		self._reading_widget.set_data(self._sensor_reading)
 
 		wind_angle = normalise_heading(self._sensor_reading.wind_direction)
 
