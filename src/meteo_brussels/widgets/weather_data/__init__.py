@@ -4,9 +4,12 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from widgets.big_label import BigLabel
+from sensor_types import MeteoDocument
 
 
 class WeatherData(QWidget):
+	_data: MeteoDocument
+
 	def __init__(self) -> None:
 		super().__init__()
 
@@ -32,7 +35,7 @@ class Header(QWidget):
 		self._date = BigLabel(scaling=1.5)
 		self._layout.addWidget(self._date, 1, 1)
 
-		self._issue_time = BigLabel(scaling=1.5)
+		self._issue_time = BigLabel(scaling=1.5, text="Unknown")
 		self._layout.addWidget(self._issue_time, 1, 2)
 
 		self._time = BigLabel(scaling=1.5)
@@ -49,5 +52,8 @@ class Header(QWidget):
 
 		self._date.setText(now.strftime("%d%m%y"))
 
-		self._issue_time.setText("Unknown") # TODO update to actual issue time
 		self._time.setText(now.strftime("%H%MUTC"))
+
+	def set_issue_time(self, time: datetime) -> None: # Should probably be METAR issue time
+		time = time.astimezone(ZoneInfo("UTC"))
+		self._issue_time.setText(time.strftime("%H%MUTC"))
