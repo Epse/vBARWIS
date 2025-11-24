@@ -8,6 +8,7 @@ from sensor_types import Reading
 class SelectableWindRose(QWidget):
 	_reading: Reading
 	_selected_key: str
+	_keys: list[str] = []
 
 	selected = Signal(str)
 	popped_out = Signal(str)
@@ -37,13 +38,19 @@ class SelectableWindRose(QWidget):
 	def set_data(self, reading: Reading) -> None:
 		self._reading = reading
 
+		keys = sorted([key for key in reading.wind_sensor_detail.keys() if "runway-" in key])
+		titles = [key[len("runway-"):] for key in keys]
+
+		if keys == sorted(self._keys):
+			self._after_selection_changed()
+			return
+
+		self._keys = keys
+
 		for button in self.button_group.buttons():
 			self.button_group.removeButton(button)
 			self.select_layout.removeWidget(button)
 			button.deleteLater()
-
-		keys = [key for key in reading.wind_sensor_detail.keys() if "runway-" in key]
-		titles = [key[len("runway-"):] for key in keys]
 
 		self._selected_key = keys[0]
 
@@ -54,8 +61,6 @@ class SelectableWindRose(QWidget):
 			
 			if idx == 0:
 				button.setChecked(True)
-
-		self._after_selection_changed()
 		
 	def _after_selection_changed(self) -> None:
 		self.wind_rose.set_wind(self._reading.wind_sensor_detail[self._selected_key].sensor_reading)

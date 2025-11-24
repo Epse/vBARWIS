@@ -81,7 +81,6 @@ class MainWindow(QMainWindow):
         self.get_data(initial=True)
     
     def get_data(self, initial: bool = False):
-        # TODO: this changes the selected sensor...
         self.status.showMessage("Refreshing...")
         data = self.api.fetch_doc()
         if data is None:
@@ -99,9 +98,9 @@ class MainWindow(QMainWindow):
         self.wind_grid.load_data(self.data)
         self.wind_rose.set_data(self.data)
         self.many_wind_roses.set_reading(self.data)
-        self.wind_rose.selected.connect(self.update_many_keys)
         
         if initial:
+            self.wind_rose.selected.connect(self.update_many_keys)
             keys = [key for key in self.data.wind_sensor_detail.keys() if "runway-" in key]
             keys.pop(0)
             self.many_wind_roses.set_show_keys(keys)

@@ -40,6 +40,7 @@ def line_for_wind_heading(heading: int) -> QLineF:
 	return QLineF(5, 5, x_heading, y_heading)
 
 
+# TODO verify its correct... I've seen some things going bad...
 class WindRose(QWidget):
 	pie_width = 10.0
 	_sensor_reading: SensorReading
