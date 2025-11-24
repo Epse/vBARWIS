@@ -1,10 +1,10 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QGridLayout, QSizePolicy
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent
 from PySide6.QtCore import Qt, QLineF
 from widgets import DARK_GREEN, BLUE
-from widgets.big_label import BigLabelMin
+from widgets.big_label import BigLabel
 from .wind_reading import WindReading
 from sensor_types import SensorReading
 from .arc import QGraphicsArcItem
@@ -89,14 +89,14 @@ class WindRose(QWidget):
 		self.wind_upper_line.setVisible(self.show_debug_lines)
 
 		self.view = QGraphicsView(self.scene)
-		self._layout = QVBoxLayout()
+		self._layout = QGridLayout()
 
-		self.title = BigLabelMin(scaling=1.5)
-		self._layout.addWidget(self.title)
-		self._layout.addWidget(self.view)
+		self.title = BigLabel(scaling=1.5)
+		self._layout.addWidget(self.view, 0, 0)
+		self._layout.addWidget(self.title, 0, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
 		self._reading_widget = WindReading()
-		self._layout.addWidget(self._reading_widget)
+		self._layout.addWidget(self._reading_widget, 1, 0)
 
 		self.setLayout(self._layout)
 

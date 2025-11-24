@@ -1,5 +1,6 @@
 from typing import cast
 from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtCore import Signal
 from sensor_types import Reading, SensorReading, RunwaySensorData
 from widgets.wind_rose import WindRose
 
@@ -9,6 +10,8 @@ class ManyWindRoses(QWidget):
 	_reading: Reading
 	_show_keys: list[str] = []
 	_roses: dict[str, WindRose] = {}
+
+	popped_out = Signal(str)
 
 	def __init__(self) -> None:
 		super().__init__()
