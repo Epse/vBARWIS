@@ -2,7 +2,7 @@ from math import floor
 import math
 from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton, QLabel, QFrame
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent, QIcon
-from PySide6.QtCore import Qt, QLineF, Signal
+from PySide6.QtCore import QEvent, Qt, QLineF, Signal
 from widgets import DARK_GREEN, BLUE
 from widgets.big_label import BigLabel
 from .wind_reading import WindReading
@@ -59,6 +59,7 @@ class WindRose(QFrame):
 			self.setLineWidth(2)
 
 		self.scene = QGraphicsScene()
+		self.scene.setBackgroundBrush(self.palette().base())
 
 		self.central = QGraphicsEllipseItem(0, 0, 10, 10)
 		self.central.setBrush(QBrush(DARK_GREEN))
@@ -178,3 +179,8 @@ class WindRose(QFrame):
 
 	def _fit(self) -> None:
 		self.view.fitInView(0, 0, 12, 12, Qt.AspectRatioMode.KeepAspectRatio)
+
+	def event(self, e: QEvent) -> bool:
+		if e.type() == QEvent.Type.PaletteChange:
+			self.scene.setBackgroundBrush(self.palette().base())
+		return super().event(e)

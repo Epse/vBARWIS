@@ -6,10 +6,12 @@ from PySide6.QtGui import QKeySequence, QIcon
 
 from sensor_types import Reading
 from api_calls import BatcAPI
+from widgets import make_color_scheme_menu
 from widgets.wind_grid import WindGrid
 from widgets.wind_rose.selectable import SelectableWindRose
 from widgets.many_wind_roses import ManyWindRoses
 from widgets.wind_rose.popout import PopOutRose
+from widgets.weather_data import WeatherData
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -33,6 +35,8 @@ class MainWindow(QMainWindow):
 
         self.menu = self.menuBar()
         self.barwisMenu = self.menu.addMenu("BARWIS")
+        make_color_scheme_menu(self.barwisMenu, lambda x: QApplication.styleHints().setColorScheme(x) and print("Color!"))
+
         self.debug_toggle = self.barwisMenu.addAction("Show Debug", self.toggle_debug)
         self.debug_toggle.setCheckable(True)
         self.debug_toggle.setChecked(self.show_debug)
@@ -54,6 +58,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
         layout = QHBoxLayout(container)
+
+        self._weather_data = WeatherData()
+        layout.addWidget(self._weather_data, stretch=1)
 
         central_container = QWidget()
         central_layout = QVBoxLayout(central_container)
