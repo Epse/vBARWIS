@@ -1,6 +1,6 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton, QLabel, QFrame
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent, QIcon
 from PySide6.QtCore import Qt, QLineF, Signal
 from widgets import DARK_GREEN, BLUE
@@ -41,7 +41,7 @@ def line_for_wind_heading(heading: int) -> QLineF:
 
 
 # TODO verify its correct... I've seen some things going bad...
-class WindRose(QWidget):
+class WindRose(QFrame):
 	pie_width = 10.0
 	_sensor_reading: SensorReading
 	"""Width of the slice showing current wind direction"""
@@ -49,10 +49,14 @@ class WindRose(QWidget):
 	popped_out = Signal(str)
 
 
-	def __init__(self, show_debug_lines: bool = False, show_pop_out_button: bool = True):
+	def __init__(self, show_debug_lines: bool = False, can_pop_out: bool = True):
 		super().__init__()
 
 		self.show_debug_lines = show_debug_lines
+
+		if can_pop_out:
+			self.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Plain)
+			self.setLineWidth(2)
 
 		self.scene = QGraphicsScene()
 
@@ -94,18 +98,30 @@ class WindRose(QWidget):
 		self._layout = QGridLayout()
 
 		self.title = BigLabel(scaling=1.5)
-		self._layout.addWidget(self.view, 0, 0)
+		self._layout.addWidget(self.view, 0, 0, 1, 4)
 		self._layout.addWidget(self.title, 0, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 		
-		if show_pop_out_button:
+		if can_pop_out:
 			popout_button = QPushButton(QIcon.fromTheme(QIcon.ThemeIcon.WindowNew), "")
 			popout_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 			popout_button.pressed.connect(lambda: self.popped_out.emit("runway-" + self._sensor_reading.label))
-			self._layout.addWidget(popout_button, 0, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+			self._layout.addWidget(popout_button, 0, 3, 1, 1, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
 		self._reading_widget = WindReading()
-		self._layout.addWidget(self._reading_widget, 1, 0)
+		self._layout.addWidget(self._reading_widget, 1, 0, 1, 4, alignment=Qt.AlignmentFlag.AlignHCenter)
 
+		# variability
+		self._layout.addWidget(QLabel("VRB BTN", alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignCenter), 2, 0)
+		self._variable_lower = BigLabel(scaling=1.5)
+		self._layout.addWidget(self._variable_lower, 2, 1, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+		self._layout.addWidget(QLabel("AND", alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignCenter), 2, 2)
+		self._variable_upper = BigLabel(scaling=1.5)
+		self._layout.addWidget(self._variable_upper, 2, 3, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+		self._layout.setColumnStretch(0, 1)
+		self._layout.setColumnStretch(1, 1)
+		self._layout.setColumnStretch(2, 1)
+		self._layout.setColumnStretch(3, 2)
 		self.setLayout(self._layout)
 
 	def set_wind(self, reading: SensorReading) -> None:
@@ -122,6 +138,11 @@ class WindRose(QWidget):
 	def _render(self):
 		self.title.setText(self._sensor_reading.label)
 		self._reading_widget.set_data(self._sensor_reading)
+
+		vrb_lower = (self._sensor_reading.wind_direction - self._sensor_reading.wind_direction_deviation_left) % 360
+		vrb_upper = (self._sensor_reading.wind_direction + self._sensor_reading.wind_direction_deviation_right) % 360
+		self._variable_lower.setText(f"{vrb_lower:03d}°")
+		self._variable_upper.setText(f"{vrb_upper:03d}°")
 
 		wind_angle = normalise_heading(self._sensor_reading.wind_direction)
 

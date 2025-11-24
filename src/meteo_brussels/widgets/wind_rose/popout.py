@@ -20,7 +20,7 @@ class PopOutRose(QWidget):
 		self.setWindowFlag(Qt.WindowType.Tool) # Gives it a smaller titlebar, and no taskbar entry, but also makes it not fully quit when window is closed...
 		self.setWindowTitle(self._key)
 
-		self._rose = WindRose(show_pop_out_button=False)
+		self._rose = WindRose(can_pop_out=False)
 		
 		self._layout = QVBoxLayout()
 		self.setLayout(self._layout)

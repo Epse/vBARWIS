@@ -45,7 +45,7 @@ class WindGrid(QWidget):
 				self.log.warning(f"Item for sensor {key} is not of runway type?")
 				continue # Should never happen
 
-			self.table.setItem(idx, 0, WindCell(item.sensor_wind.cross_wind, "RL"))
+			self.table.setItem(idx, 0, WindCell(item.sensor_wind.cross_wind, "")) # NO suffix, data does not contain wether its left or right
 			self.table.setItem(idx, 2, WindCell(item.sensor_wind.tail_wind, "TH"))
 
 		
