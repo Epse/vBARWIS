@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, BeforeValidator
 from typing import Literal, Any
 from typing import Annotated
+from .meteo_reading import MeteoReadings
 
 class InnerWind(BaseModel):
 	wind_speed: int
@@ -55,7 +56,8 @@ class SensorSensorData(BaseSensorData):
 SensorDetail = Annotated[SensorSensorData | RunwaySensorData, Field(discriminator='sensor_type')]
 
 class Reading(BaseModel):
-	# skip airport_movements
-	# skip meteo_readings as well, we want per runway part
+	# skip airport_movements, we care about VATSIM
 	wind_forecast: WindForecast
 	wind_sensor_detail: dict[str, SensorDetail]
+	wind_aloft: dict[str, Any] | None
+	meteo_readings: MeteoReadings

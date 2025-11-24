@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
             self.status.showMessage("Got no data..")
             return
 
-        current = data['data']['currentLabel']
+        current = data.currentLabel
         self.data = self.api.get_latest_reading(data)
 
         if self.data is None:

@@ -1,7 +1,7 @@
 import requests
 import logging
 from typing import Any
-from sensor_types import Reading
+from sensor_types import Reading, MeteoDocument
 
 PAGE_URL = "https://www.batc.be/en/meteo/meteo-readings"
 API_URL = "https://www.batc.be/en/api/visualisation/meteo"
@@ -21,20 +21,21 @@ class BatcAPI():
 		response = self.session.get(PAGE_URL, headers=FAKE_HEADERS)
 		self.log.info(f"Setup request got {response.status_code}")
 
-	def fetch_doc(self) -> dict[str, Any] | None:
+	def fetch_doc(self) -> MeteoDocument | None:
 		response = self.session.get(API_URL, headers=FAKE_HEADERS)
 		if response.status_code != 200:
 			self.log.warning(f"Bad response from api, got status: {response.status_code} and {response.request.headers}")
 			return None
-		return response.json()
+		json =  response.json()
+		if not isinstance(json, dict) or'data' not in json.keys():
+			return None
+		return MeteoDocument.model_validate(json['data'])
 
-	def get_latest_reading(self, fetched: dict[str, Any] | None = None) -> Reading | None:
+	def get_latest_reading(self, fetched: MeteoDocument | None = None) -> Reading | None:
 		data = fetched or self.fetch_doc()
 		if not data:
 			return None
-		data = data['data']
-		latest = data['timepoints'][data['currentLabel']]
-		return Reading.model_validate(latest)
+		return data.timepoints[data.currentLabel]
 
 	def close(self):
          self.session.close()
