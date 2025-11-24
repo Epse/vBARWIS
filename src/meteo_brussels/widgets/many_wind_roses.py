@@ -38,6 +38,7 @@ class ManyWindRoses(QWidget):
 
 			if key not in self._roses.keys():
 				self._roses[key] = WindRose()
+				self._roses[key].popped_out.connect(self.popped_out)
 				self._layout.addWidget(self._roses[key])
 
 			self._roses[key].set_wind(cast(RunwaySensorData, reading).sensor_reading)

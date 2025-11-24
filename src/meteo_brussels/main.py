@@ -2,13 +2,14 @@ import logging
 
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QKeySequence
+from PySide6.QtGui import QKeySequence, QIcon
 
 from sensor_types import Reading
 from api_calls import BatcAPI
 from widgets.wind_grid import WindGrid
 from widgets.wind_rose.selectable import SelectableWindRose
 from widgets.many_wind_roses import ManyWindRoses
+from widgets.wind_rose.popout import PopOutRose
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -21,14 +22,14 @@ class MainWindow(QMainWindow):
     auto_refresh = False
     show_debug = False
 
+    _popped_out: dict[str, PopOutRose] = {}
+
     def __init__(self):
         super().__init__()
 
         self.api.setup_cookies()
 
         self.setWindowTitle("vBARWIS")
-        #self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
-        #self.setWindowFlag(Qt.WindowType.Tool) # Gives it a smaller titlebar, and no taskbar entry, but also makes it not fully quit when window is closed...
 
         self.menu = self.menuBar()
         self.barwisMenu = self.menu.addMenu("BARWIS")
@@ -70,14 +71,17 @@ class MainWindow(QMainWindow):
             self.timer.start(self.refresh_interval)
 
         self.wind_rose = SelectableWindRose(show_debug_lines=self.show_debug)
+        self.wind_rose.popped_out.connect(self.pop_out)
         central_layout.addWidget(self.wind_rose)
 
         self.many_wind_roses = ManyWindRoses()
+        self.many_wind_roses.popped_out.connect(self.pop_out)
         layout.addWidget(self.many_wind_roses, stretch=0)
 
         self.get_data(initial=True)
     
     def get_data(self, initial: bool = False):
+        # TODO: this changes the selected sensor...
         self.status.showMessage("Refreshing...")
         data = self.api.fetch_doc()
         if data is None:
@@ -101,6 +105,9 @@ class MainWindow(QMainWindow):
             keys = [key for key in self.data.wind_sensor_detail.keys() if "runway-" in key]
             keys.pop(0)
             self.many_wind_roses.set_show_keys(keys)
+
+        for (_key, popout) in self._popped_out.items():
+            popout.set_data_from(self.data)
 
         log.info(f"Got {len(self.data.wind_sensor_detail)}")
         self.status.showMessage(f"Done, data from {current}")
@@ -130,6 +137,21 @@ class MainWindow(QMainWindow):
         self.debug_toggle.setChecked(self.show_debug)
 
         self.wind_rose.set_debug(self.show_debug)
+
+    def pop_out(self, key: str) -> None:
+        if self.data is None:
+            print("Bailing popout, no data")
+            return
+
+        if key in self._popped_out.keys():
+            self.status.showMessage("Already popped out")
+            return
+
+        print(f"Popping out {key}")
+        popout = PopOutRose(key, self.data.wind_sensor_detail[key].sensor_reading)
+        self._popped_out[key] = popout
+        popout.about_to_close.connect(lambda: self._popped_out.pop(key, None))
+        popout.show()
 
 
 def main():

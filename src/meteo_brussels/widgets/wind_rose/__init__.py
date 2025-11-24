@@ -1,8 +1,8 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QGridLayout, QSizePolicy
-from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent
-from PySide6.QtCore import Qt, QLineF
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton
+from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent, QIcon
+from PySide6.QtCore import Qt, QLineF, Signal
 from widgets import DARK_GREEN, BLUE
 from widgets.big_label import BigLabel
 from .wind_reading import WindReading
@@ -40,14 +40,15 @@ def line_for_wind_heading(heading: int) -> QLineF:
 	return QLineF(5, 5, x_heading, y_heading)
 
 
-# TODO: need to deal with the needed overlaps somehow...
 class WindRose(QWidget):
 	pie_width = 10.0
 	_sensor_reading: SensorReading
 	"""Width of the slice showing current wind direction"""
 
+	popped_out = Signal(str)
 
-	def __init__(self, show_debug_lines: bool = False):
+
+	def __init__(self, show_debug_lines: bool = False, show_pop_out_button: bool = True):
 		super().__init__()
 
 		self.show_debug_lines = show_debug_lines
@@ -93,7 +94,13 @@ class WindRose(QWidget):
 
 		self.title = BigLabel(scaling=1.5)
 		self._layout.addWidget(self.view, 0, 0)
-		self._layout.addWidget(self.title, 0, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+		self._layout.addWidget(self.title, 0, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+		
+		if show_pop_out_button:
+			popout_button = QPushButton(QIcon.fromTheme(QIcon.ThemeIcon.WindowNew), "")
+			popout_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+			popout_button.pressed.connect(lambda: self.popped_out.emit("runway-" + self._sensor_reading.label))
+			self._layout.addWidget(popout_button, 0, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
 		self._reading_widget = WindReading()
 		self._layout.addWidget(self._reading_widget, 1, 0)

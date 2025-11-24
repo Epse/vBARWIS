@@ -10,10 +10,12 @@ class SelectableWindRose(QWidget):
 	_selected_key: str
 
 	selected = Signal(str)
+	popped_out = Signal(str)
 
 	def __init__(self, show_debug_lines: bool = False):
 		super().__init__()
 		self.wind_rose = WindRose(show_debug_lines=show_debug_lines)
+		self.wind_rose.popped_out.connect(self.popped_out)
 
 		self.select_container = QWidget()
 		self.select_layout = QHBoxLayout(self.select_container)
