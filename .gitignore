@@ -2,3 +2,5 @@
 .venv/
 build/
 dist/
+.mypy_cache/
+pyrightconfig.json
