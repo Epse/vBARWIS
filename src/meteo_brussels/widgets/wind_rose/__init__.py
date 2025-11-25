@@ -10,10 +10,10 @@ from sensor_types import SensorReading
 from .arc import QGraphicsArcItem
 
 
-def transform_angle(angle: float) -> int:
+def normalise_heading(heading: int) -> int:
     """
-    Takes a float angle in degrees,
-    and turns it into a Qt angle.
+    Takes a heading in degrees,
+    and turns it into a standard angle.
 
     Qt angles follow these invariants:
     - angles are integers, in 16ths of a degree
@@ -21,15 +21,10 @@ def transform_angle(angle: float) -> int:
     - Positive angles go counter-clockwise
 
     Wind rose angles go differently,
-    0 is at the top and positive angles go to the right
+    0 is at the top and positive angles go to the right.
+
+    This method does not convert to 16ths of a degree
     """
-    angle = -angle + 90.0
-    angle = angle % 360.0
-
-    return floor(angle * 16) # Integer representation
-
-def normalise_heading(heading: int) -> int:
-    """same as above, but only corrects the transform"""
     return (- heading + 90) % 360
 
 
