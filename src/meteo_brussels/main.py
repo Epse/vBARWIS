@@ -1,8 +1,8 @@
 import logging
 
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QSplashScreen
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QKeySequence, QIcon
+from PySide6.QtGui import QKeySequence, QIcon, QPixmap
 
 from sensor_types import Reading
 from api_calls import BatcAPI
@@ -12,6 +12,7 @@ from widgets.wind_rose.selectable import SelectableWindRose
 from widgets.many_wind_roses import ManyWindRoses
 from widgets.wind_rose.popout import PopOutRose
 from widgets.weather_data import WeatherData
+from resources import resources
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -32,6 +33,8 @@ class MainWindow(QMainWindow):
         self.api.setup_cookies()
 
         self.setWindowTitle("vBARWIS")
+        icon = QIcon(":/sock.png")
+        self.setWindowIcon(icon)
 
         self.menu = self.menuBar()
         self.barwisMenu = self.menu.addMenu("BARWIS")
@@ -166,8 +169,15 @@ class MainWindow(QMainWindow):
 
 def main():
     app = QApplication()
+
+    img = QPixmap(":/sock.png")
+    splash = QSplashScreen(img)
+    splash.show()
+    app.processEvents()
+
     window = MainWindow()
     window.show()
+    splash.finish(window)
 
     app.exec()
 
