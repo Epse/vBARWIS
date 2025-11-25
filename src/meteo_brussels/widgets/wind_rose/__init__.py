@@ -58,8 +58,8 @@ class WindRose(QFrame):
 			self.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Plain)
 			self.setLineWidth(2)
 
-		self.scene = QGraphicsScene()
-		self.scene.setBackgroundBrush(self.palette().base())
+		self._scene = QGraphicsScene()
+		self._scene.setBackgroundBrush(self.palette().base())
 
 		self.central = QGraphicsEllipseItem(0, 0, 10, 10)
 		self.central.setBrush(QBrush(DARK_GREEN))
@@ -73,29 +73,29 @@ class WindRose(QFrame):
 		self.right_arc.setPen(arc_pen)
 		self.right_arc.setBrush(Qt.BrushStyle.NoBrush)
 
-		self.scene.addItem(self.central)
-		self.scene.addItem(self.left_arc)
-		self.scene.addItem(self.right_arc)
+		self._scene.addItem(self.central)
+		self._scene.addItem(self.left_arc)
+		self._scene.addItem(self.right_arc)
 
 		# Temporary, until I figure out tickmarks
 		pen = QPen(self.palette().windowText(), 0.0)
-		self.scene.addLine(0, 0, 10, 10, pen)
-		self.scene.addLine(0, 10, 10, 0, pen)
-		self.scene.addLine(0, 5, 10, 5, pen)
-		self.scene.addLine(5, 0, 5, 10, pen)
+		self._scene.addLine(0, 0, 10, 10, pen)
+		self._scene.addLine(0, 10, 10, 0, pen)
+		self._scene.addLine(0, 5, 10, 5, pen)
+		self._scene.addLine(5, 0, 5, 10, pen)
 
 		# Add placeholder orientation lines
-		self.heading_line = self.scene.addLine(5, 5, 0, 0, QPen(QColor.fromString("pink"), 0.0))
+		self.heading_line = self._scene.addLine(5, 5, 0, 0, QPen(QColor.fromString("pink"), 0.0))
 
 		debug_pen = QPen(QColor.fromString("cyan"), 0.0)
-		self.wind_lower_line = self.scene.addLine(5, 5, 0, 0, debug_pen)
-		self.wind_upper_line = self.scene.addLine(5, 5, 0, 0, debug_pen)
+		self.wind_lower_line = self._scene.addLine(5, 5, 0, 0, debug_pen)
+		self.wind_upper_line = self._scene.addLine(5, 5, 0, 0, debug_pen)
 
 		self.heading_line.setVisible(self.show_debug_lines)
 		self.wind_lower_line.setVisible(self.show_debug_lines)
 		self.wind_upper_line.setVisible(self.show_debug_lines)
 
-		self.view = QGraphicsView(self.scene)
+		self.view = QGraphicsView(self._scene)
 		self._layout = QGridLayout()
 
 		self.title = BigLabel(scaling=1.5)
@@ -182,5 +182,8 @@ class WindRose(QFrame):
 
 	def event(self, e: QEvent) -> bool:
 		if e.type() == QEvent.Type.PaletteChange:
-			self.scene.setBackgroundBrush(self.palette().base())
+			self._scene.setBackgroundBrush(self.palette().base())
 		return super().event(e)
+
+	def _draw_tick_marks(self) -> None:
+		pass
