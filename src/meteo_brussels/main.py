@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(central_container, stretch=1)
 
         self.wind_grid = WindGrid()
-        central_layout.addWidget(self.wind_grid)
+        central_layout.addWidget(self.wind_grid, stretch=0)
 
         self.status = self.statusBar()
         self.status.showMessage("Done")
@@ -82,11 +82,11 @@ class MainWindow(QMainWindow):
 
         self.wind_rose = SelectableWindRose(show_debug_lines=self.show_debug)
         self.wind_rose.popped_out.connect(self.pop_out)
-        central_layout.addWidget(self.wind_rose)
+        central_layout.addWidget(self.wind_rose, stretch=1)
 
         self.many_wind_roses = ManyWindRoses()
         self.many_wind_roses.popped_out.connect(self.pop_out)
-        layout.addWidget(self.many_wind_roses, stretch=0)
+        layout.addWidget(self.many_wind_roses)
 
         self.get_data(initial=True)
     

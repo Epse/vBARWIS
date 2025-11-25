@@ -1,5 +1,6 @@
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QGridLayout, QTableWidget
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 import logging
 
 from sensor_types.readings import Reading, RunwaySensorData
@@ -16,6 +17,7 @@ class WindGrid(QWidget):
 		self.outer_layout.addWidget(QLabel("WIND"))
 
 		self.table = QTableWidget()
+		self.table.setSizeAdjustPolicy(self.table.SizeAdjustPolicy.AdjustToContents)
 		self.table.setColumnCount(4)
 		self.table.setHorizontalHeaderLabels(["CROSS", "MAX", "TAIL", "MAX"])
 		self.render_inner()
@@ -47,5 +49,3 @@ class WindGrid(QWidget):
 
 			self.table.setItem(idx, 0, WindCell(item.sensor_wind.cross_wind, "")) # NO suffix, data does not contain wether its left or right
 			self.table.setItem(idx, 2, WindCell(item.sensor_wind.tail_wind, "TH"))
-
-		
