@@ -1,6 +1,6 @@
 import logging
 
-from PySide6.QtWidgets import *
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeySequence, QIcon
 
