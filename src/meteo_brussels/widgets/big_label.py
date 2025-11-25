@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QLabel, QApplication, QFrame, QWidget, QHBoxLayout
 
 class BigLabel(QLabel):
 	_scaling: float = 2.0
-	def __init__(self, scaling: float = 2.0, text: str | None = None) -> None:
+	def __init__(self, scaling: float = 2.0, text: str | None = None, stretchable: bool = False) -> None:
 		super().__init__(text=text)
 		self._scaling = scaling
 
@@ -13,5 +13,6 @@ class BigLabel(QLabel):
 		self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Plain)
 		self.setLineWidth(1)
 
-		self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+		if not stretchable:
+			self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 	

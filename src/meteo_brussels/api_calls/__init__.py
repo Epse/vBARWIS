@@ -39,3 +39,11 @@ class BatcAPI():
 
 	def close(self):
          self.session.close()
+
+
+class MetarAPI():
+	def get(self, icao: str) -> str | None:
+		response = requests.get(f"https://metar.vatsim.net/{icao}")
+		if response.ok:
+			return response.text
+		return None
