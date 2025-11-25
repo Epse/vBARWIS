@@ -1,6 +1,6 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton, QLabel, QFrame, QGraphicsLineItem, QAbstractGraphicsShapeItem, QApplication
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton, QLabel, QFrame, QGraphicsLineItem, QGraphicsTextItem, QApplication
 from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent, QIcon, QTransform
 from PySide6.QtCore import QEvent, Qt, QLineF, Signal
 from widgets import DARK_GREEN, BLUE
@@ -34,7 +34,7 @@ class WindRose(QFrame):
     pie_width = 10.0
     _sensor_reading: SensorReading
     """Width of the slice showing current wind direction"""
-    _tick_items: list[QAbstractGraphicsShapeItem | QGraphicsLineItem] = []
+    _tick_items: list[QGraphicsEllipseItem | QGraphicsLineItem | QGraphicsTextItem] = []
     _radius: int = 50
 
     popped_out = Signal(str)
@@ -112,6 +112,11 @@ class WindRose(QFrame):
         self.setLayout(self._layout)
 
     def set_wind(self, reading: SensorReading) -> None:
+        # FIXME placeholder
+        reading.wind_direction = 320
+        reading.wind_direction_deviation_left = 20
+        reading.wind_direction_deviation_right = 40
+
         self._sensor_reading = reading
 
         self._render()
@@ -172,7 +177,10 @@ class WindRose(QFrame):
             self._scene.setBackgroundBrush(self.palette().base())
             pen = QPen(self.palette().windowText(), 0.0)
             for item in self._tick_items:
-                item.setPen(pen)
+                if isinstance(item, QGraphicsTextItem):
+                    item.setDefaultTextColor(self.palette().text().color())
+                else:
+                    item.setPen(pen)
         return super().event(e)
 
     def _draw_tick_marks(self) -> None:
@@ -214,7 +222,7 @@ class WindRose(QFrame):
                     txt_x -= bound.width()
 
                 txt.setPos(txt_x, txt_y)
-                # TODO add to list
+                self._tick_items.append(txt)
 
 
     def line_for_wind_heading(self, heading: int) -> QLineF:
