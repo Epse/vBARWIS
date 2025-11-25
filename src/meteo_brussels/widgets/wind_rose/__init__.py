@@ -112,11 +112,6 @@ class WindRose(QFrame):
         self.setLayout(self._layout)
 
     def set_wind(self, reading: SensorReading) -> None:
-        # FIXME placeholder
-        reading.wind_direction = 320
-        reading.wind_direction_deviation_left = 20
-        reading.wind_direction_deviation_right = 40
-
         self._sensor_reading = reading
 
         self._render()
@@ -148,10 +143,10 @@ class WindRose(QFrame):
         self.central.setSpanAngle(floor((360.0 - self.pie_width) * 16))
 
         self.left_arc.setStartAngle(floor(wind_angle + self.pie_width / 2) * 16)
-        self.left_arc.setSpanAngle(self._sensor_reading.wind_direction_deviation_left * 16)
+        self.left_arc.setSpanAngle(floor(self._sensor_reading.wind_direction_deviation_left - self.pie_width / 2) * 16)
 
         self.right_arc.setStartAngle(floor(wind_angle - self.pie_width / 2) * 16)
-        self.right_arc.setSpanAngle(-self._sensor_reading.wind_direction_deviation_right * 16)
+        self.right_arc.setSpanAngle(floor(-self._sensor_reading.wind_direction_deviation_right + self.pie_width / 2) * 16)
 
         self._fit()
 
