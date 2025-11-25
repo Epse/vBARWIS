@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
 
         self.menu = self.menuBar()
         self.barwisMenu = self.menu.addMenu("BARWIS")
-        make_color_scheme_menu(self.barwisMenu, lambda x: QApplication.styleHints().setColorScheme(x) and print("Color!"))
+        make_color_scheme_menu(self.barwisMenu, self._switch_color_scheme)
 
         self.debug_toggle = self.barwisMenu.addAction("Show Debug", self.toggle_debug)
         self.debug_toggle.setCheckable(True)
@@ -158,6 +158,10 @@ class MainWindow(QMainWindow):
         self._popped_out[key] = popout
         popout.about_to_close.connect(lambda: self._popped_out.pop(key, None))
         popout.show()
+
+    def _switch_color_scheme(self, scheme: Qt.ColorScheme) -> None:
+        print(f"Changing color to {repr(scheme)}")
+        QApplication.styleHints().setColorScheme(scheme)
 
 
 def main():
