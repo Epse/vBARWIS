@@ -1,7 +1,7 @@
 from math import floor
 import math
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton, QLabel, QFrame, QGraphicsLineItem
-from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent, QIcon
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGridLayout, QSizePolicy, QPushButton, QLabel, QFrame, QGraphicsLineItem, QAbstractGraphicsShapeItem, QApplication
+from PySide6.QtGui import QBrush, QColor, QPen, QResizeEvent, QShowEvent, QIcon, QTransform
 from PySide6.QtCore import QEvent, Qt, QLineF, Signal
 from widgets import DARK_GREEN, BLUE
 from widgets.big_label import BigLabel
@@ -28,19 +28,14 @@ def normalise_heading(heading: int) -> int:
     return (- heading + 90) % 360
 
 
-def line_for_wind_heading(heading: int) -> QLineF:
-    normalised_heading = normalise_heading(heading)
-    y_heading = -math.sin(math.radians(normalised_heading)) * 5 + 5
-    x_heading = math.cos(math.radians(normalised_heading)) * 5 + 5
-    return QLineF(5, 5, x_heading, y_heading)
-
 
 # TODO verify its correct... I've seen some things going bad... VRB btn 300 and 000, heading 320 seems to give bad results
 class WindRose(QFrame):
     pie_width = 10.0
     _sensor_reading: SensorReading
     """Width of the slice showing current wind direction"""
-    _tick_items: list[QGraphicsEllipseItem | QGraphicsLineItem] = []
+    _tick_items: list[QAbstractGraphicsShapeItem | QGraphicsLineItem] = []
+    _radius: int = 50
 
     popped_out = Signal(str)
 
@@ -57,15 +52,15 @@ class WindRose(QFrame):
         self._scene = QGraphicsScene()
         self._scene.setBackgroundBrush(self.palette().base())
 
-        self.central = QGraphicsEllipseItem(0, 0, 10, 10)
+        self.central = QGraphicsEllipseItem(-self._radius, -self._radius, 2*self._radius, 2*self._radius)
         self.central.setBrush(QBrush(DARK_GREEN))
         self.central.setPen(Qt.PenStyle.NoPen)
 
-        arc_pen = QPen(BLUE, 1.0, c=Qt.PenCapStyle.FlatCap)
-        self.left_arc = QGraphicsArcItem(0, 0, 10, 10)
+        arc_pen = QPen(BLUE, 10.0, c=Qt.PenCapStyle.FlatCap)
+        self.left_arc = QGraphicsArcItem(-self._radius, -self._radius, 2*self._radius, 2*self._radius)
         self.left_arc.setPen(arc_pen)
         self.left_arc.setBrush(Qt.BrushStyle.NoBrush)
-        self.right_arc = QGraphicsArcItem(0, 0, 10, 10)
+        self.right_arc = QGraphicsArcItem(-self._radius, -self._radius, 2*self._radius, 2*self._radius)
         self.right_arc.setPen(arc_pen)
         self.right_arc.setBrush(Qt.BrushStyle.NoBrush)
 
@@ -73,20 +68,14 @@ class WindRose(QFrame):
         self._scene.addItem(self.left_arc)
         self._scene.addItem(self.right_arc)
 
-        # Temporary, until I figure out tickmarks
         self._draw_tick_marks()
-        #pen = QPen(self.palette().windowText(), 0.0)
-        #self._scene.addLine(0, 0, 10, 10, pen)
-        #self._scene.addLine(0, 10, 10, 0, pen)
-        #self._scene.addLine(0, 5, 10, 5, pen)
-        #self._scene.addLine(5, 0, 5, 10, pen)
 
         # Add placeholder orientation lines
-        self.heading_line = self._scene.addLine(5, 5, 0, 0, QPen(QColor.fromString("pink"), 0.0))
+        self.heading_line = self._scene.addLine(self._radius, self._radius, 0, 0, QPen(QColor.fromString("pink"), 0.0))
 
         debug_pen = QPen(QColor.fromString("cyan"), 0.0)
-        self.wind_lower_line = self._scene.addLine(5, 5, 0, 0, debug_pen)
-        self.wind_upper_line = self._scene.addLine(5, 5, 0, 0, debug_pen)
+        self.wind_lower_line = self._scene.addLine(self._radius, self._radius, 0, 0, debug_pen)
+        self.wind_upper_line = self._scene.addLine(self._radius, self._radius, 0, 0, debug_pen)
 
         self.heading_line.setVisible(self.show_debug_lines)
         self.wind_lower_line.setVisible(self.show_debug_lines)
@@ -144,9 +133,9 @@ class WindRose(QFrame):
 
         wind_angle = normalise_heading(self._sensor_reading.wind_direction)
 
-        self.heading_line.setLine(line_for_wind_heading(self._sensor_reading.wind_direction))
-        self.wind_lower_line.setLine(line_for_wind_heading(self._sensor_reading.wind_direction + self._sensor_reading.wind_direction_deviation_left))
-        self.wind_upper_line.setLine(line_for_wind_heading(self._sensor_reading.wind_direction - self._sensor_reading.wind_direction_deviation_right))
+        self.heading_line.setLine(self.line_for_wind_heading(self._sensor_reading.wind_direction))
+        self.wind_lower_line.setLine(self.line_for_wind_heading(self._sensor_reading.wind_direction + self._sensor_reading.wind_direction_deviation_left))
+        self.wind_upper_line.setLine(self.line_for_wind_heading(self._sensor_reading.wind_direction - self._sensor_reading.wind_direction_deviation_right))
 
         # Normalisation functions guarantee positive angles from any heading. This simplifies
 
@@ -175,7 +164,8 @@ class WindRose(QFrame):
         return self._sensor_reading
 
     def _fit(self) -> None:
-        self.view.fitInView(0, 0, 12, 12, Qt.AspectRatioMode.KeepAspectRatio)
+        content_rect = self._scene.sceneRect()
+        self.view.fitInView(content_rect, Qt.AspectRatioMode.KeepAspectRatio)
 
     def event(self, e: QEvent) -> bool:
         if e.type() == QEvent.Type.PaletteChange:
@@ -186,20 +176,49 @@ class WindRose(QFrame):
         return super().event(e)
 
     def _draw_tick_marks(self) -> None:
-        radius = 5
         pen = QPen(self.palette().windowText(), 0.0)
 
-        self._tick_items.append(self._scene.addEllipse(0, 0, 2*radius, 2*radius, pen, Qt.BrushStyle.NoBrush))
+        self._tick_items.append(self._scene.addEllipse(-self._radius, -self._radius, 2*self._radius, 2*self._radius, pen, Qt.BrushStyle.NoBrush))
 
-        for angle in range(10, 360, 10):
+        font = QApplication.font()
+        font.setPixelSize(2)
+
+        for heading in range(10, 360 + 1, 10):
+            angle = normalise_heading(heading)
             y_heading = -math.sin(math.radians(angle))
             x_heading = math.cos(math.radians(angle))
 
-            scale = 0.5 if angle % 30 == 0 else 0.2
+            scale = 3 if angle % 30 == 0 else 1
 
-            y_start = radius + y_heading * radius
-            y_end = radius + y_heading * (radius + scale)
-            x_start = radius + x_heading * radius
-            x_end = radius + x_heading * (radius + scale)
+            y_start = y_heading * self._radius
+            y_end = y_heading * (self._radius + scale)
+            x_start = x_heading * self._radius
+            x_end = x_heading * (self._radius + scale)
 
             self._tick_items.append(self._scene.addLine(x_start, y_start, x_end, y_end, pen))
+
+            if angle % 30 == 0:
+                txt = self._scene.addText(f"{heading:03d}", font)
+                txt.adjustSize()
+                bound = txt.sceneTransform().mapRect(txt.boundingRect())
+                txt_x = x_start
+                txt_y = y_start
+
+                if 0 <= angle < 180:
+                    txt_y -= bound.height() / 2
+
+                if heading == 360:
+                    txt_y -= bound.height() / 4
+
+                if 180 < heading < 360:
+                    txt_x -= bound.width()
+
+                txt.setPos(txt_x, txt_y)
+                # TODO add to list
+
+
+    def line_for_wind_heading(self, heading: int) -> QLineF:
+        normalised_heading = normalise_heading(heading)
+        y_heading = -math.sin(math.radians(normalised_heading)) * self._radius
+        x_heading = math.cos(math.radians(normalised_heading)) * self._radius
+        return QLineF(0, 0, x_heading, y_heading)
